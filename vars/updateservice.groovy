@@ -1,4 +1,4 @@
-def call(String serviceName, Integer desiredCount = 1, String cluster = 'default-cluster') {
+def call(String serviceName, Integer desiredCount = 1, String cluster = 'devcluster') {
     echo "Scaling ECS service '${serviceName}' in cluster '${cluster}' to desired count ${desiredCount}"
 
     sh """
