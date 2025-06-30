@@ -1,3 +1,3 @@
-def lists3buckets(){
+def listbuckets(){
     sh "aws s3 ls"
 }
