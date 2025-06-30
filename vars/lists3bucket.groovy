@@ -1,3 +1,3 @@
 def listbuckets(){
-    sh "aws s3 ls"
+    sh 'aws s3 ls'
 }
