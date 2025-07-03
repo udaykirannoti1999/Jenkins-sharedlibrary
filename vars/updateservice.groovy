@@ -1,23 +1,49 @@
-def call(String serviceName, Integer desiredCount = 1, String cluster = 'devcluster') {
-    echo "Scaling ECS service '${serviceName}' in cluster '${cluster}' to desired count ${desiredCount}"
+def call() {
+    def imageName = env.IMAGE_NAME
+    def ecrRepoUrl = env.ECR_REPO_URL
 
-    sh """
-        aws ecs update-service \
-          --cluster ${cluster} \
-          --service ${serviceName} \
-          --desired-count ${desiredCount}
-    """
-    waitForServiceStability(serviceName, cluster)
+    if (!imageName) {
+        error "Environment variable IMAGE_NAME is required (e.g., trivy-sample)"
+    }
+
+    if (!ecrRepoUrl) {
+        error "Environment variable ECR_REPO_URL is required (e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo)"
+    }
+
+    def imageTag = myecrtag()
+    def fullImageName = "${ecrRepoUrl}:${imageTag}"
+
+    try {
+        sh """
+            if docker images | grep -q ${imageName}; then
+                docker rmi -f ${imageName}:${imageTag} || true
+            fi
+        """
+
+        sh "docker build -t ${imageName}:${imageTag} ."
+        sh "docker tag ${imageName}:${imageTag} ${fullImageName}"
+
+        def ecrDomain = ecrRepoUrl.split('/')[0]
+        sh "aws ecr get-login-password | docker login --username AWS --password-stdin ${ecrDomain}"
+
+        sh "docker push ${fullImageName}"
+
+        echo "✅ Docker image successfully pushed: ${fullImageName}"
+    } catch (err) {
+        error "❌ Docker build/push failed: ${err.getMessage()}"
+    }
 }
+def myecrtag(String BRANCH_NAME) {
+    def tag = ''
+    if (params.BRANCH_NAME == 'dev') {
+        tag = 'dev'
+    } else if (params.BRANCH_NAME == 'preprod') {
+        tag = 'preprod'
+    } else if (params.BRANCH_NAME == 'prod') {
+        tag = 'prod'
+    } else {
+        error "Unknown branch: ${params.BRANCH_NAME}. Cannot push Docker image."
+    }
 
-def waitForServiceStability(String serviceName, String cluster) {
-    echo "Waiting for ECS service '${serviceName}' in cluster '${cluster}' to become stable..."
-
-    sh """
-        aws ecs wait services-stable \
-          --cluster ${cluster} \
-          --services ${serviceName}
-    """
-
-    echo "ECS service '${serviceName}' is now stable."
+    return tag
 }
