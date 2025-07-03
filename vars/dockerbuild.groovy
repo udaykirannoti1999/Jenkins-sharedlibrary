@@ -1,16 +1,21 @@
 def call() {
     def imageName = env.IMAGE_NAME
     def ecrRepoUrl = env.ECR_REPO_URL
+    def branchName = params.BRANCH_NAME
 
     if (!imageName) {
-        error "Environment variable IMAGE_NAME is required (e.g., trivy-sample)"
+        error "❌ Environment variable IMAGE_NAME is required (e.g., trivy-sample)"
     }
 
     if (!ecrRepoUrl) {
-        error "Environment variable ECR_REPO_URL is required (e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo)"
+        error "❌ Environment variable ECR_REPO_URL is required (e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo)"
     }
 
-    def imageTag = myecrtag()
+    if (!branchName) {
+        error "❌ BRANCH_NAME parameter is required."
+    }
+
+    def imageTag = resolveTag(branchName)
     def fullImageName = "${ecrRepoUrl}:${imageTag}"
 
     try {
@@ -33,17 +38,14 @@ def call() {
         error "❌ Docker build/push failed: ${err.getMessage()}"
     }
 }
-def myecrtag(String BRANCH_NAME) {
-    def tag = ''
-    if (params.BRANCH_NAME == 'dev') {
-        tag = 'dev'
-    } else if (params.BRANCH_NAME == 'preprod') {
-        tag = 'preprod'
-    } else if (params.BRANCH_NAME == 'prod') {
-        tag = 'prod'
-    } else {
-        error "Unknown branch: ${params.BRANCH_NAME}. Cannot push Docker image."
-    }
 
-    return tag
+def resolveTag(String branchName) {
+    switch (branchName) {
+        case 'dev':
+        case 'preprod':
+        case 'prod':
+            return branchName
+        default:
+            error "❌ Unknown BRANCH_NAME: '${branchName}'. Allowed: dev, preprod, prod"
+    }
 }
