@@ -14,7 +14,6 @@ def call(String imageFullName) {
                 docker rmi -f ${imageName}:${imageTag}
             fi
         """
-
         sh "docker build -t ${imageName}:${imageTag} ."
         sh "docker tag ${imageName}:${imageTag} ${fullImageName}"
         sh "aws ecr get-login-password | docker login --username AWS --password-stdin ${ecrRepoUrl.split('/')[0]}"
