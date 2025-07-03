@@ -1,11 +1,12 @@
 def call(String imageFullName) {
-    def (imageName, imageTag) = imageFullName.tokenize(':')
+    def (imageName, _) = imageFullName.tokenize(':')
     def ecrRepoUrl = env.ECR_REPO_URL
 
     if (!ecrRepoUrl) {
         error "Environment variable ECR_REPO_URL is required (e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo)"
     }
 
+    def imageTag = myecrtag()
     def fullImageName = "${ecrRepoUrl}:${imageTag}"
 
     try {
@@ -23,4 +24,19 @@ def call(String imageFullName) {
     } catch (err) {
         error "Docker build/push failed: ${err.getMessage()}"
     }
+}
+
+def myecrtag() {
+    def tag = ''
+    if (params.BRANCH_NAME == 'dev') {
+        tag = 'dev'
+    } else if (params.BRANCH_NAME == 'preprod') {
+        tag = 'preprod'
+    } else if (params.BRANCH_NAME == 'prod') {
+        tag = 'prod'
+    } else {
+        error "Unknown branch: ${params.BRANCH_NAME}. Cannot push Docker image."
+    }
+
+    return tag
 }
