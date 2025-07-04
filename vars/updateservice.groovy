@@ -1,7 +1,7 @@
 def call(String serviceName) {
     def cluster = env.ECS_CLUSTER ?: 'devcluster'
     def desiredCount = 1
-    def taskDefJsonPath = "task-def.json"
+    def taskDefJsonPath = "resources/task-def.json"
 
     def newTaskDefArn = registerNewTaskDefinition(taskDefJsonPath)
     updateEcsService(serviceName, cluster, desiredCount, newTaskDefArn)
