@@ -1,5 +1,5 @@
 {
-    "family": "niginix-task-definition",
+    "family": "payment",
     "containerDefinitions": [
         {
             "name": "myimage",
