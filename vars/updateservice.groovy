@@ -1,8 +1,7 @@
 def call(String serviceName) {
     def cluster = env.ECS_CLUSTER ?: 'devcluster'
     def desiredCount = 1
-    def taskDefJsonPath = "resources/${serviceName}-task-def.json"
-
+    def taskDefJsonPath = "${serviceName}-task-def.json" // instead of task-defs/
     try {
         def jsonContent = libraryResource(taskDefJsonPath)
         def newTaskDefArn = registerNewTaskDefinition(jsonContent, serviceName)
