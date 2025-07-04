@@ -1,17 +1,24 @@
 def call(String serviceName) {
-    def cluster = 'devcluster'               
-    def desiredCount = 1                    
+    def cluster = env.ECS_CLUSTER ?: 'devcluster'
+    def desiredCount = 1
+    def taskDefJsonPath = "task-def.json"
 
-    echo "Scaling ECS service '${serviceName}' in cluster '${cluster}' to desired count ${desiredCount}"
+    def newTaskDefArn = registerNewTaskDefinition(taskDefJsonPath)
+    updateEcsService(serviceName, cluster, desiredCount, newTaskDefArn)
+    waitForServiceStability(serviceName, cluster)
+}
+
+def updateEcsService(String serviceName, String cluster, int desiredCount, String taskDefinitionArn) {
+    echo "Updating ECS service '${serviceName}' in cluster '${cluster}' to use task definition '${taskDefinitionArn}' and desired count ${desiredCount}"
 
     sh """
         aws ecs update-service \
           --cluster ${cluster} \
           --service ${serviceName} \
-          --desired-count ${desiredCount}
+          --desired-count ${desiredCount} \
+          --task-definition ${taskDefinitionArn} \
+          --force-new-deployment
     """
-
-    waitForServiceStability(serviceName, cluster)
 }
 
 def waitForServiceStability(String serviceName, String cluster) {
@@ -26,3 +33,19 @@ def waitForServiceStability(String serviceName, String cluster) {
     echo "ECS service '${serviceName}' is now stable."
 }
 
+def registerNewTaskDefinition(String taskDefJsonPath) {
+    echo "Registering new ECS task definition from ${taskDefJsonPath}"
+
+    def taskDefArn = sh(
+        script: """
+            aws ecs register-task-definition \
+              --cli-input-json file://${taskDefJsonPath} \
+              --query 'taskDefinition.taskDefinitionArn' \
+              --output text
+        """,
+        returnStdout: true
+    ).trim()
+
+    echo "Registered new task definition: ${taskDefArn}"
+    return taskDefArn
+}
