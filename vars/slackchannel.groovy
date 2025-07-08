@@ -1,5 +1,5 @@
 def call(String customMessage, String channel) {
-    def slackChannel = channel ?: '#default-channel'  // Use passed channel or fallback
+    def slackChannel = channel ?: '#default-channel'  
 
     wrap([$class: 'BuildUser']) {
         sh 'git show -s --pretty=%an > commit.txt'
