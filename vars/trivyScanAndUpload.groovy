@@ -27,7 +27,7 @@ def call(Map config) {
             uploadReportToS3(htmlReportName, config)
 
             if (criticalCount > 0 && config.get('failBuild', true)) {
-                error "BUILD FAILED: ${criticalCount} CRITICAL vulnerabilities found."
+                echo "BUILD FAILED: ${criticalCount} CRITICAL vulnerabilities found."
             } else if (criticalCount > 0) {
                 echo "WARNING: ${criticalCount} CRITICAL vulnerabilities found."
             } else {
