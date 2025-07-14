@@ -7,18 +7,22 @@ def call(String fullImageName) {
         def ecrDomain = fullImageName.split('/')[0]
         echo "🔐 Logging into ECR: ${ecrDomain}"
 
-        // Use /tmp/.docker for Docker config to avoid permission issues
+        // Set HOME=/tmp to avoid writing to /.docker
         sh """
-            mkdir -p /tmp/.docker
-            aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin --config /tmp/.docker ${ecrDomain}
+            export HOME=/tmp
+            aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${ecrDomain}
         """
 
         echo "📦 Pushing Docker image: ${fullImageName}"
-        sh "docker --config /tmp/.docker push ${fullImageName}"
+        sh """
+            export HOME=/tmp
+            docker push ${fullImageName}
+        """
 
         echo "✅ Docker image pushed: ${fullImageName}"
     } catch (err) {
         error "❌ dockerPush failed: ${err.getMessage()}"
     }
 }
+
 
