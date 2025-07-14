@@ -3,9 +3,9 @@ def call(Map config) {
         error "Missing required parameters: 'imageFullName' and 's3Bucket' are mandatory."
     }
 
-    def imageFullName = config.imageFullName
-    def jsonReportName = "trivy-results.json"
-    def htmlReportName = "trivy-results.html"
+    def imageFullName    = config.imageFullName
+    def jsonReportName   = env.TRIVY_JSON_REPORT ?: "scan_result.json"
+    def htmlReportName   = env.TRIVY_HTML_REPORT ?: "trivy-report.html"
 
     script {
         stage('Trivy Security Scan') {
@@ -27,7 +27,7 @@ def call(Map config) {
             uploadReportToS3(htmlReportName, config)
 
             if (criticalCount > 0 && config.get('failBuild', true)) {
-                echo "BUILD FAILED: ${criticalCount} CRITICAL vulnerabilities found."
+                error "BUILD FAILED: ${criticalCount} CRITICAL vulnerabilities found."
             } else if (criticalCount > 0) {
                 echo "WARNING: ${criticalCount} CRITICAL vulnerabilities found."
             } else {
