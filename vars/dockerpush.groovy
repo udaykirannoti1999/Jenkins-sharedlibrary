@@ -6,6 +6,7 @@ def call(String fullImageName) {
 
     try {
         def ecrDomain = fullImageName.split('/')[0]
+        mkdir -p /tmp/.docker
         sh "aws ecr get-login-password | docker login --username AWS --password-stdin ${ecrDomain}"
         sh "docker push ${fullImageName}"
 
