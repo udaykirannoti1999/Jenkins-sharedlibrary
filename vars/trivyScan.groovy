@@ -11,10 +11,10 @@ def call(String buildGitBranch, String envTag) {
 
         trivy image --severity HIGH,CRITICAL --ignore-unfixed --format table ${imageFullName} > trivy-output.txt
 
-         "<html><head><title>Trivy Report</title></head><body><h2>Trivy Scan Result</h2>" > ${reportFileHtml}
-         "<p>Scan Time: \${timestamp}</p><p>Git Branch: \${git_branch}</p><pre>" >> ${reportFileHtml}
-        cat  trivy-output.txt >> ${reportFileHtml}
-         "</pre></body></html>" >> ${reportFileHtml}
+        echo "<html><head><title>Trivy Report</title></head><body><h2>Trivy Scan Result</h2>" > ${reportFileHtml}
+        echo "<p>Scan Time: \${timestamp}</p><p>Git Branch: \${git_branch}</p><pre>" >> ${reportFileHtml}
+        cat trivy-output.txt >> ${reportFileHtml}
+        echo "</pre></body></html>" >> ${reportFileHtml}
     """
 
     // Publish the HTML report
