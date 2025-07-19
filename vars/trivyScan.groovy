@@ -19,8 +19,7 @@ def call(String buildGitBranch, String envTag) {
         echo "</pre></body></html>" >> ${reportFileHtml}
     """
 
-    // Ensure the trivy-output.txt is generated
-    sh 'echo "🔎 Dumping trivy-output.txt:" && cat trivy-output.txt'
+
 
     // Extract vulnerability count
     def vulnCountRaw = sh(script: """
