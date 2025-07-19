@@ -2,6 +2,9 @@ def call(String buildGitBranch, String envTag) {
     def imageFullName = "${buildGitBranch}-${envTag}"
     def reportFileHtml = "trivy-report.html"
 
+    echo "🐳 Building Docker image: ${imageFullName}"
+    sh "docker build -t ${imageFullName} ."
+
     echo "🔍 Starting Trivy scan for image: ${imageFullName}"
 
     // Run Trivy scan and generate HTML report
@@ -9,19 +12,14 @@ def call(String buildGitBranch, String envTag) {
         timestamp=\$(date '+%Y-%m-%d %H:%M:%S')
         git_branch='${buildGitBranch}'
 
-        # Run Trivy scan and save output
-        trivy image --severity HIGH,CRITICAL --ignore-unfixed --format table ${imageFullName} > trivy-output.txt 2>/dev/null
+        trivy image --severity HIGH,CRITICAL --ignore-unfixed --format table --exit-code 0 ${imageFullName} > trivy-output.txt
 
-        # Create HTML report
         echo "<html><head><title>Trivy Report</title></head><body><h2>Trivy Scan Result</h2>" > ${reportFileHtml}
         echo "<p>Scan Time: \${timestamp}</p><p>Git Branch: \${git_branch}</p><pre>" >> ${reportFileHtml}
         cat trivy-output.txt >> ${reportFileHtml}
         echo "</pre></body></html>" >> ${reportFileHtml}
     """
 
-
-
-    // Extract vulnerability count
     def vulnCountRaw = sh(script: """
         grep -vE '^(\\+|\\|\\s*ID|\\s*\$)' trivy-output.txt | wc -l
     """, returnStdout: true).trim()
@@ -35,7 +33,6 @@ def call(String buildGitBranch, String envTag) {
 
     echo "🛡️ Vulnerabilities found: ${vulnCount}"
 
-    // Publish the HTML report in Jenkins
     publishHTML target: [
         allowMissing: false,
         alwaysLinkToLastBuild: true,
