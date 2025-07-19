@@ -19,6 +19,23 @@ def call(String buildGitBranch, String envTag) {
         echo "</pre></body></html>" >> ${reportFileHtml}
     """
 
+    // Ensure the trivy-output.txt is generated
+    sh 'echo "🔎 Dumping trivy-output.txt:" && cat trivy-output.txt'
+
+    // Extract vulnerability count
+    def vulnCountRaw = sh(script: """
+        grep -vE '^(\\+|\\|\\s*ID|\\s*\$)' trivy-output.txt | wc -l
+    """, returnStdout: true).trim()
+
+    def vulnCount = 0
+    try {
+        vulnCount = vulnCountRaw.toInteger()
+    } catch (Exception e) {
+        echo "⚠️ Failed to parse vulnerability count: ${e.message}"
+    }
+
+    echo "🛡️ Vulnerabilities found: ${vulnCount}"
+
     // Publish the HTML report in Jenkins
     publishHTML target: [
         allowMissing: false,
@@ -28,4 +45,6 @@ def call(String buildGitBranch, String envTag) {
         reportFiles: reportFileHtml,
         reportName: "Trivy Vulnerability Report"
     ]
+
+    return vulnCount
 }
