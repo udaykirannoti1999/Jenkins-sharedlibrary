@@ -9,8 +9,5 @@ def call(String buildGitBranch, String envTag) {
             --build-arg ENV_TAG=${envTag} .
     """
 
-    echo "Removing Docker image: ${imageFullName}"
-    sh "docker rmi ${imageFullName} || true"
-
     return imageFullName
 }
