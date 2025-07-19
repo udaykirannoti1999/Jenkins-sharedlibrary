@@ -13,9 +13,16 @@ def call(String buildGitBranch, String envTag) {
 
     def json = readJSON file: 'trivy-output.json'
 
-    def vulnerabilities = json.collectMany { it.Vulnerabilities ?: [] }
+    def vulnerabilities = []
+    if (json instanceof List) {
+        vulnerabilities = json.collectMany { it.containsKey('Vulnerabilities') ? it.Vulnerabilities : [] }
+    } else if (json.containsKey('Results')) {
+        vulnerabilities = json.Results.collectMany { it.containsKey('Vulnerabilities') ? it.Vulnerabilities : [] }
+    }
+
     def highCount = vulnerabilities.count { it.Severity == 'HIGH' }
     def criticalCount = vulnerabilities.count { it.Severity == 'CRITICAL' }
+    def totalCount = highCount + criticalCount
 
     writeFile file: vulnSummaryFile, text: "HIGH: ${highCount}\nCRITICAL: ${criticalCount}\n"
 
@@ -40,4 +47,6 @@ def call(String buildGitBranch, String envTag) {
         reportFiles: reportFileHtml,
         reportName: "Trivy Vulnerability Report"
     ]
+
+    return totalCount
 }
