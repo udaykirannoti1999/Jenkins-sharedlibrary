@@ -1,26 +1,16 @@
-// vars/dockerBuild.groovy
-def call(String imageName, String imageTag, String ecrRepoUrl) {
-    if (!imageName || !imageTag || !ecrRepoUrl) {
-        error "❌ dockerBuild: imageName, imageTag, and ecrRepoUrl are required."
-    }
+def call(String buildGitBranch, String envTag) {
+    def imageFullName = "${buildGitBranch}-${envTag}".replaceAll('/', '-')
 
-    def fullImageName = "${ecrRepoUrl}:${imageTag}"
+    echo "Building Docker image: ${imageFullName}"
 
-    try {
-        // Remove existing local image
-        sh """
-            if docker images | grep -q ${imageName}; then
-                docker rmi -f ${imageName}:${imageTag} || true
-            fi
-        """
+    sh """
+        docker build -t ${imageFullName} \
+            --build-arg GIT_BRANCH=${buildGitBranch} \
+            --build-arg ENV_TAG=${envTag} .
+    """
 
-        // Build and tag the image
-        sh "docker build -t ${imageName}:${imageTag} ."
-        sh "docker tag ${imageName}:${imageTag} ${fullImageName}"
+    echo "Removing Docker image: ${imageFullName}"
+    sh "docker rmi ${imageFullName} || true"
 
-        echo "✅ Docker image built and tagged as ${fullImageName}"
-        return fullImageName
-    } catch (err) {
-        error "❌ dockerBuild failed: ${err.getMessage()}"
-    }
+    return imageFullName
 }
