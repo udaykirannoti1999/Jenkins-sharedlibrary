@@ -2,9 +2,6 @@ def call(String buildGitBranch, String envTag) {
     def imageFullName = "${buildGitBranch}-${envTag}"
     def reportFileHtml = "trivy-report.html"
 
-    echo "🐳 Building Docker image: ${imageFullName}"
-    sh "docker build -t ${imageFullName} ."
-
     echo "🔍 Starting Trivy scan for image: ${imageFullName}"
 
     // Run Trivy scan and generate HTML report
