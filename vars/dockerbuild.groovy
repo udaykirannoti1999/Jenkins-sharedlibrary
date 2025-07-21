@@ -1,5 +1,5 @@
 def call(String buildGitBranch, String envTag) {
-    def imageFullName = "${buildGitBranch}-${envTag}".replaceAll('/', '-')
+    def imageFullName = "${buildGitBranch} ${envTag}".replaceAll('/', '-')
 
     echo "Building Docker image: ${imageFullName}"
 
