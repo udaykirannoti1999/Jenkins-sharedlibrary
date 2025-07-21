@@ -9,7 +9,7 @@ def call(String buildGitBranch, String envTag) {
 
     // Run Trivy scan and generate HTML report
     sh """
-        timestamp=\$(date '+%Y-%m-%d %H:%M:%S')
+        timestamp=\$(TZ='Asia/Kolkata' date '+%Y-%m-%d %H:%M:%S'); echo \$timestamp
         git_branch='${buildGitBranch}'
 
         trivy image --severity HIGH,CRITICAL --ignore-unfixed --format table --exit-code 0 ${imageFullName} > trivy-output.txt
