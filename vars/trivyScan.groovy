@@ -1,5 +1,9 @@
 def call(String buildGitBranch, String envTag) {
-    def imageFullName = "${buildGitBranch}-${envTag}"
+    def imageLabel = "${buildGitBranch} ${envTag}".replaceAll('/', '-')  // for logging
+    def imageFullName = "${buildGitBranch}-${envTag}".replaceAll('/', '-')  // for Docker image name
+    
+    echo "Building Docker image: ${imageLabel}"
+    
     def reportFileHtml = "trivy-report.html"
 
     echo "🔍 Starting Trivy scan for image: ${imageFullName}"
